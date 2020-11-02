@@ -3,3 +3,5 @@
 2. pdf_link
 3. Website_screenshooter
 4. JWT_cracker
+5. File_analysis
+6. all new 
