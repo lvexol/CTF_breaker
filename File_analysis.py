@@ -128,6 +128,7 @@ def analyze_file():
     hidden_data = check_for_hidden_data(filepath)
     result_display.insert(END, f"6. Hidden Data Check: {hidden_data}\n\n")
 
+<<<<<<< HEAD
     # Compression Check (ZIP files)
     compression_check = check_compression(filepath)
     result_display.insert(END, f"7. Compression Check: {compression_check}\n\n")
@@ -158,3 +159,7 @@ scroll.pack(side="right", fill="y")
 result_display.config(yscrollcommand=scroll.set)
 
 root.mainloop()
+=======
+if __name__ == "__main__":
+    main()
+>>>>>>> refs/remotes/origin/main
