@@ -1,3 +1,5 @@
+# required instlation of zlib
+# pip install python-magic
 import os
 import sys
 import zipfile

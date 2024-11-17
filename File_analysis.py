@@ -1,25 +1,20 @@
 import os
 import hashlib
 import magic
-from tkinter import Tk, filedialog, Label, Text, Scrollbar, END
 from PIL import Image
-import PyPDF2
 import zipfile
 import io
 from io import BytesIO
 import struct
 
-# Function to get file type
 def get_file_type(filepath):
     mime = magic.Magic(mime=True)
     return mime.from_file(filepath)
 
-# Function to check if file type was modified
 def check_for_modifications(filepath):
     actual_type = get_file_type(filepath).split('/')[1]
     return actual_type
 
-# Function to calculate file hash
 def calculate_hash(filepath):
     sha256_hash = hashlib.sha256()
     with open(filepath, "rb") as f:
@@ -27,7 +22,6 @@ def calculate_hash(filepath):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-# Function to extract EXIF metadata from images
 def extract_exif(filepath):
     try:
         image = Image.open(filepath)
@@ -36,34 +30,20 @@ def extract_exif(filepath):
             return "\n".join([f"{tag}: {value}" for tag, value in exif_data.items()])
         else:
             return "No EXIF data found."
-    except IOError:
+    except Exception:
         return "File is not an image or does not contain EXIF data."
 
-# Function to extract text from PDF files
-def extract_pdf_text(filepath):
-    try:
-        with open(filepath, 'rb') as pdf_file:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-            return text[:500]  # Display first 500 chars
-    except Exception as e:
-        return f"Error reading PDF: {e}"
-
-# Function to check for hidden data (basic steganography check for images)
 def check_for_hidden_data(filepath):
     try:
         with open(filepath, 'rb') as file:
             data = file.read()
-            if b'\x89PNG\r\n\x1a\n' in data:  # Check if PNG header exists (as an example)
+            if b'\x89PNG\r\n\x1a\n' in data:  # Check if PNG header exists
                 return "Potential hidden data in PNG file."
             else:
                 return "No hidden data detected."
     except Exception as e:
         return f"Error checking for hidden data: {e}"
 
-# Function to detect compressed files (e.g., ZIP)
 def check_compression(filepath):
     try:
         with open(filepath, 'rb') as file:
@@ -75,7 +55,6 @@ def check_compression(filepath):
     except Exception as e:
         return f"Error checking compression: {e}"
 
-# Function to compare file signatures (magic bytes)
 def compare_magic_bytes(filepath):
     magic_bytes = {
         'PDF': b'%PDF',
@@ -84,7 +63,7 @@ def compare_magic_bytes(filepath):
     }
     try:
         with open(filepath, 'rb') as file:
-            file_start = file.read(4)
+            file_start = file.read(8)  # Read more bytes to accommodate longer signatures
             for file_type, signature in magic_bytes.items():
                 if file_start.startswith(signature):
                     return f"File matches {file_type} signature."
@@ -92,74 +71,65 @@ def compare_magic_bytes(filepath):
     except Exception as e:
         return f"Error checking file signature: {e}"
 
-# Main function to perform all analyses
-def analyze_file():
-    filepath = filedialog.askopenfilename()
-    if not filepath:
-        result_display.insert(END, "No file selected.\n")
-        return
-
-    result_display.delete(1.0, END)
-    result_display.insert(END, f"Analyzing {filepath}...\n\n")
+def analyze_file(filepath):
+    print("\n" + "="*50)
+    print(f"Analyzing file: {filepath}")
+    print("="*50 + "\n")
 
     # File Type
     file_type = get_file_type(filepath)
-    result_display.insert(END, f"1. Detected File Type: {file_type}\n\n")
+    print(f"1. Detected File Type: {file_type}\n")
 
     # Modifications Check
     actual_type = check_for_modifications(filepath)
-    result_display.insert(END, f"2. File Type Check: {actual_type}\n\n")
+    print(f"2. File Type Check: {actual_type}\n")
 
     # Hash Calculation
     hash_value = calculate_hash(filepath)
-    result_display.insert(END, f"3. SHA-256 Hash: {hash_value}\n\n")
+    print(f"3. SHA-256 Hash: {hash_value}\n")
 
     # EXIF Data (Image Files)
     if file_type.startswith("image"):
         exif_data = extract_exif(filepath)
-        result_display.insert(END, f"4. EXIF Metadata:\n{exif_data}\n\n")
-
-    # PDF Text Extraction
-    elif file_type == "application/pdf":
-        pdf_text = extract_pdf_text(filepath)
-        result_display.insert(END, f"5. PDF Text Content:\n{pdf_text}\n\n")
+        print(f"4. EXIF Metadata:\n{exif_data}\n")
 
     # Hidden Data (Steganography)
     hidden_data = check_for_hidden_data(filepath)
-    result_display.insert(END, f"6. Hidden Data Check: {hidden_data}\n\n")
+    print(f"5. Hidden Data Check: {hidden_data}\n")
 
-<<<<<<< HEAD
     # Compression Check (ZIP files)
     compression_check = check_compression(filepath)
-    result_display.insert(END, f"7. Compression Check: {compression_check}\n\n")
+    print(f"6. Compression Check: {compression_check}\n")
 
     # Magic Bytes (File Signature Check)
     magic_check = compare_magic_bytes(filepath)
-    result_display.insert(END, f"8. Magic Bytes Check: {magic_check}\n\n")
+    print(f"7. Magic Bytes Check: {magic_check}\n")
 
-    result_display.insert(END, "Analysis complete.\n")
+    print("Analysis complete.\n")
 
-# Setup the main window
-root = Tk()
-root.title("File Analysis Tool")
+def main():
+    while True:
+        print("\nFile Analysis Tool")
+        print("-----------------")
+        filepath = input("Enter the path to the file to analyze (or 'q' to quit): ").strip()
+        
+        if filepath.lower() == 'q':
+            print("Goodbye!")
+            break
+            
+        if not os.path.exists(filepath):
+            print("Error: File does not exist. Please check the path and try again.")
+            continue
+            
+        try:
+            analyze_file(filepath)
+        except Exception as e:
+            print(f"Error analyzing file: {e}")
+            
+        print("\nPress Enter to analyze another file, or 'q' to quit")
+        if input().lower() == 'q':
+            print("Goodbye!")
+            break
 
-# File selection and analysis button
-Label(root, text="Click 'Analyze' to select and analyze a file").pack(pady=10)
-analyze_button = Label(root, text="Analyze", font=("Arial", 12), fg="blue", cursor="hand2")
-analyze_button.pack(pady=5)
-analyze_button.bind("<Button-1>", lambda event: analyze_file())
-
-# Text box for displaying results
-result_display = Text(root, wrap="word", width=80, height=25)
-result_display.pack(padx=10, pady=10)
-
-# Scrollbar
-scroll = Scrollbar(root, command=result_display.yview)
-scroll.pack(side="right", fill="y")
-result_display.config(yscrollcommand=scroll.set)
-
-root.mainloop()
-=======
 if __name__ == "__main__":
     main()
->>>>>>> refs/remotes/origin/main
